@@ -20,7 +20,7 @@ Number of keys in PrimeNet: 905
 
 Number of included ConceptNet tuples: 3161
 
-Average length of value for each key in PrimeNet: 3.09
+Average number of values for each key in PrimeNet: 3.09
 
 ## Examples of current PrimeNet
 PrimeNet['food'] = ['bacon', 'beef', 'biscket', 'chopstick', 'coconut', 'cookie', 'cornbread', 'cracker', 'dessert', 'drink', 'fruit', 'gnocchi', 'hotdog', 'lasagna', 'leftover', 'lobster', 'makisushi', 'meat', 'oatmeal', 'pizza', 'salmon', 'sausage', 'snack', 'soupd', 'spaghetti', 'stew', 'tiramisu', 'turkey', 'bread', 'butter', 'cheese', 'egg', 'rice', 'salad', 'soup', 'sushi', 'vegetable']

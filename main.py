@@ -8,13 +8,14 @@ def main():
     ## hyper-parameters
     dataset_dir = "./Data/ConceptNet/"
     data_save_dir = "./Data/PrimeNet.json"
+    remained_recursion_depth = 5
 
     ## load dataset
     # dataset: [(e1, rel, e2, label), ...]
     dataset = load_conceptnet_only_keep_IsA_relation(dataset_dir)
 
     ## build PrimeNet
-    PrimeNet = build_primenet(dataset)
+    PrimeNet = build_primenet(dataset, remained_recursion_depth)
 
     ## save PrimeNet
     with open(data_save_dir, 'w') as f:

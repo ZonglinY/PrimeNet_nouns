@@ -12,6 +12,13 @@ len(dataset):  15333
 [nltk_data]     /home/zy223/nltk_data...
 [nltk_data]   Package averaged_perceptron_tagger is already up-to-
 [nltk_data]       date!
-cnt_used_conceptnet_instance:  3171
-len(PrimeNet):  908
-average length of collection for each key in PrimeNet:  3.4922907488986783
+
+Statistics for NOT hierachical PrimeNet:
+cnt_used_conceptnet_instance:  3161
+len(PrimeNet):  905
+average length of collection for each key in PrimeNet:  3.4928176795580113
+
+Statistics for hierachical PrimeNet:
+cnt_used_conceptnet_instance:  3161
+len(PrimeNet):  905
+average length of collection for each key in PrimeNet:  3.0895027624309392

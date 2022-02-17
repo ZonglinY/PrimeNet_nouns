@@ -4,7 +4,7 @@
 #SBATCH -n 1
 #SBATCH --mem=10GB
 #SBATCH -t 200:00:00
-#SBATCH --partition=gpu
+#SBATCH --partition=claire
 #SBATCH --gres=gpu:1
 #SBATCH --output ./Out/PrimeNet.out
 

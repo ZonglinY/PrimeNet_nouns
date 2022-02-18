@@ -25,15 +25,19 @@ Average number of values for each key in PrimeNet: 3.09
 ## Examples of current PrimeNet
 PrimeNet['food'] = ['bacon', 'beef', 'biscket', 'chopstick', 'coconut', 'cookie', 'cornbread', 'cracker', 'dessert', 'drink', 'fruit', 'gnocchi', 'hotdog', 'lasagna', 'leftover', 'lobster', 'makisushi', 'meat', 'oatmeal', 'pizza', 'salmon', 'sausage', 'snack', 'soupd', 'spaghetti', 'stew', 'tiramisu', 'turkey', 'bread', 'butter', 'cheese', 'egg', 'rice', 'salad', 'soup', 'sushi', 'vegetable']
 
-PrimeNet['coffee'] = ['brewedcoffee', 'cappuccino', 'cappuchino', 'latte']
+PrimeNet['drink'] = ['beverage', 'lemonade', 'screwdriver']
 
-PrimeNet['dessert'] = ['cake', 'sorbet']
+PrimeNet['beverage'] = ['beer', 'coffee', 'juice', 'milk', 'soda', 'tea', 'vodca', 'water', 'wine']
+
+PrimeNet['coffee'] = ['brewedcoffee', 'cappuccino', 'cappuchino', 'latte']
 
 PrimeNet['bread'] = ['roll', 'toast', 'bagel']
 
-PrimeNet['cheese'] = ['brie', 'cheddar', 'cheshire', 'emmental', 'gouda', 'lancashire', "pont-l'eveque", 'savoyard', 'stilton', 'tilsit']
+PrimeNet['dessert'] = ['cake', 'sorbet']
 
-PrimeNet['vegetable'] = ['artichoke', 'asparagus', 'beet', 'burdock', 'cabbage', 'carrot', 'cauliflower', 'chicory', 'cress', 'eggplant', 'honey', 'onion', 'radish', 'sweetcorn', 'turnip', 'vegemite', 'watermelon', 'yam', 'zucchini', 'celery', 'spinach', 'bean', 'corn', 'cucumber', 'lettuce', 'pea', 'potato', 'tomato']
+PrimeNet['meat'] = ['ham', 'hamburger', 'lamb', 'muscle', 'pork', 'steak', 'venison', 'chicken']
+
+PrimeNet['pasta'] = ['gnocchi', 'macaroni', 'spaghetti']
 
 ## To run the code 
 python main.py or sbatch main

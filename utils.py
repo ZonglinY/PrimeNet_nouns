@@ -72,7 +72,7 @@ def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
     for concept in all_values_in_this_node:
         if concept in PrimeNet:
             if_end_node = False
-    if remained_depth < 0:
+    if remained_depth == 0:
         if_end_node = True
     if if_end_node:
         return all_values_in_this_node

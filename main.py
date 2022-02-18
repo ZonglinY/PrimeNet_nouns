@@ -8,7 +8,7 @@ def main():
     ## hyper-parameters
     dataset_dir = "./Data/ConceptNet/"
     data_save_dir = "./Data/PrimeNet.json"
-    remained_recursion_depth = 5
+    remained_recursion_depth = 2
 
     ## load dataset
     # dataset: [(e1, rel, e2, label), ...]

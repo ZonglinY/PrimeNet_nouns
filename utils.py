@@ -57,10 +57,9 @@ def load_conceptnet_only_keep_IsA_relation(dataset_root_path):
 # INPUT
 #   PrimeNet: PrimeNet
 #   cur_node: a key in PrimeNet
-#   all_values_in_and_below_this_node: initialized as an empty list
 #   remained_depth: max depth for the recursion (it seems there's circle in PrimeNet so there's unlimited depth for this recursion; hence we use remained_depth to avoid this problem)
 # OUTPUT
-#   all_values_in_and_below_this_node: a list of entities
+#   all_values_in_and_below_this_node: a list of string entities
 def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
     assert cur_node in PrimeNet
 
@@ -90,10 +89,10 @@ def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
 #   Only when e1 and e2 are (both single word but not phrase) and (both noun) and (not equal) do we count it in PrimeNet
 # INPUT
 #   dataset: [(e1, rel, e2, label), ...]
-#   remained_depth: max depth for recursion during building hierachical PrimeNet (it seems there's circle in PrimeNet so there's unlimited depth for this recursion; hence we use remained_depth to avoid this problem)
+#   max_recursion_depth: max depth for recursion during building hierachical PrimeNet (it seems there's circle in PrimeNet so there's unlimited depth for this recursion; hence we use max_recursion_depth to avoid this problem)
 # OUTPUT
 #   PrimeNet: {}
-def build_primenet(dataset, remained_depth):
+def build_primenet(dataset, max_recursion_depth):
     print("len(dataset): ", len(dataset))
 
     # sys.setrecursionlimit(10000)
@@ -135,17 +134,17 @@ def build_primenet(dataset, remained_depth):
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]
     print('average length of collection for each key in PrimeNet: ', sum(len_collection_for_each_key)/len(len_collection_for_each_key))
 
-    # to build hierachical PrimeNet
-    #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set remained_depth for this depth)
+    # Build hierachical PrimeNet
+    #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth)
     for key in PrimeNet:
         concept_list = PrimeNet[key]
         hierachical_concept_list = copy.deepcopy(concept_list)
         for concept_as_key in concept_list:
             if concept_as_key in PrimeNet:
                 for concept_as_value in concept_list:
-                    # to be more hierachical, we remove certain concept
-                    all_values_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=remained_depth)
-                    if concept_as_value in all_values_below_this_node:
+                    # to be more hierachical, we remove certain repetitive concepts
+                    all_values_in_and_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=max_recursion_depth)
+                    if concept_as_value in all_values_in_and_below_this_node:
                         if concept_as_value in hierachical_concept_list:
                             hierachical_concept_list.remove(concept_as_value)
         PrimeNet[key] = hierachical_concept_list

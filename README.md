@@ -39,4 +39,5 @@ PrimeNet['pasta'] = ['cannelloni', 'fedelline', 'fettuccine', 'fettucini', 'gnoc
 
 ## To run the code 
 Step 1: Download full ConceptNet data (https://s3.amazonaws.com/conceptnet/downloads/2019/edges/conceptnet-assertions-5.7.0.csv.gz) to ./Data/ConceptNet/ and unzip it as csv file.
+
 Step 2: python main.py or sbatch main

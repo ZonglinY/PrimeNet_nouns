@@ -6,13 +6,15 @@ from utils import load_conceptnet_only_keep_IsA_relation, load_full_conceptnet_o
 
 def main():
     ## hyper-parameters
-    dataset_dir = "./Data/ConceptNet/"
     max_recursion_depth = 5
     # if_full_conceptnet: when False, use the 100k tuples version of conceptnet
     if_full_conceptnet = True
     if if_full_conceptnet:
+        dataset_dir = "./Data/ConceptNet/"
+        # dataset_dir = "/home/v-zonyang/Data/"
         data_save_dir = "./Data/PrimeNet_full_ConceptNet.json"
     else:
+        dataset_dir = "./Data/ConceptNet/"
         data_save_dir = "./Data/PrimeNet.json"
 
     ## load dataset

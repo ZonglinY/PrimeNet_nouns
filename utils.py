@@ -83,8 +83,12 @@ def load_full_conceptnet_only_keep_IsA_relation(dataset_root_path):
                 e1 = lines[1]
                 e2 = lines[2]
                 if e1.startswith('/c/en/') and e2.startswith('/c/en/'):
-                    e1 = e1.replace('/c/en', '').strip('/').replace('_', ' ')
+                    # e1 = e1.replace('/c/en', '').strip('/').replace('_', ' ')
+                    e1 = e1.replace('/c/en', '').split('/')[1].replace('_', ' ')
                     e2 = e2.replace('/c/en', '').split('/')[1].replace('_', ' ')
+                    if '/' in e1 or '/' in e2:
+                        print("e1: {}; e2: {}".format(lines[1], lines[2]))
+                        raise Exception
                     dataset_collection.append((e1, rel_no_noise, e2, None))
     print("Loaded 'IsA' tuples from conceptnet-assertions-5.7.0.csv.")
     return dataset_collection
@@ -133,7 +137,7 @@ def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
 # OUTPUT
 #   PrimeNet: {}
 def build_primenet(dataset, max_recursion_depth):
-    print("len(dataset): ", len(dataset))
+    print("\nlen(dataset): ", len(dataset))
 
     # sys.setrecursionlimit(10000)
     # print("sys.getrecursionlimit(): ", sys.getrecursionlimit())
@@ -143,6 +147,7 @@ def build_primenet(dataset, max_recursion_depth):
     # Build PrimeNet (not hierachical)
     PrimeNet = {}
     cnt_used_conceptnet_instance = 0
+    print("\nBuilding raw (non-hierachical) PrimeNet...")
     for (e1, rel, e2, label) in dataset:
         assert rel == "IsA"
         # e1 and e2 should both be single word but not phrase
@@ -168,7 +173,7 @@ def build_primenet(dataset, max_recursion_depth):
             cnt_used_conceptnet_instance += 1
 
     # statistics
-    print("\nStatistics for NOT hierachical PrimeNet:")
+    print("Statistics for NOT hierachical PrimeNet:")
     print("cnt_used_conceptnet_instance: ", cnt_used_conceptnet_instance)
     print("len(PrimeNet): ", len(PrimeNet))
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]
@@ -176,21 +181,36 @@ def build_primenet(dataset, max_recursion_depth):
 
     # Build hierachical PrimeNet
     #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth)
+    print("\nBuilding hierachical PrimeNet...")
+    # dict_noter: dict_noter[concept_as_key] = all_values_in_and_below_this_node; to recuce repetitive computations
+    dict_noter = {}
     for key in PrimeNet:
         concept_list = PrimeNet[key]
         hierachical_concept_list = copy.deepcopy(concept_list)
+        # used_concept_as_key: collect the concept_as_key that has been iterated
+        used_concept_as_key = []
         for concept_as_key in concept_list:
+            if len(hierachical_concept_list) == 0:
+                break
+            used_concept_as_key.append(concept_as_key)
             if concept_as_key in PrimeNet:
                 for concept_as_value in concept_list:
                     # to be more hierachical, we remove certain repetitive concepts
-                    all_values_in_and_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=max_recursion_depth)
+                    if concept_as_key not in dict_noter:
+                        all_values_in_and_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=max_recursion_depth)
+                        dict_noter[concept_as_key] = all_values_in_and_below_this_node
+                    else:
+                        all_values_in_and_below_this_node = dict_noter[concept_as_key]
                     if concept_as_value in all_values_in_and_below_this_node:
                         if concept_as_value in hierachical_concept_list:
                             hierachical_concept_list.remove(concept_as_value)
-        PrimeNet[key] = hierachical_concept_list
+                            # when len(hierachical_concept_list) == 0, we should just keep used_concept_as_key
+                            if len(hierachical_concept_list) == 0:
+                                break
+        PrimeNet[key] = sorted(list(set(hierachical_concept_list + used_concept_as_key)))
 
     # statistics
-    print("\nStatistics for hierachical PrimeNet:")
+    print("Statistics for hierachical PrimeNet:")
     print("cnt_used_conceptnet_instance: ", cnt_used_conceptnet_instance)
     print("len(PrimeNet): ", len(PrimeNet))
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]

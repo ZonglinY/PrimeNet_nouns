@@ -1,4 +1,4 @@
-import os, copy, sys
+import os, copy, sys, csv
 import nltk
 
 # FUNCTION
@@ -51,6 +51,46 @@ def load_conceptnet_only_keep_IsA_relation(dataset_root_path):
 
     print("len(dataset_collection): ", len(dataset_collection))
     return dataset_collection
+
+
+# FUNCTION
+#   load full conceptnet from dataset_root_path, and only keep tuples with IsA relation;
+# INPUT
+#   dataset_root_path: a string for dataset root dir, where file conceptnet-assertions-5.7.0.csv is in
+# OUTPUT
+#   dataset_collection: [(e1, rel, e2, label), ...]
+def load_full_conceptnet_only_keep_IsA_relation(dataset_root_path):
+    all_relations = []
+    dataset_collection = []
+    print("Loading from conceptnet-assertions-5.7.0.csv...")
+    with open(os.path.join(dataset_root_path, 'conceptnet-assertions-5.7.0.csv'), 'r') as f:
+        csvFile = csv.reader(f)
+        for id, lines in enumerate(csvFile):
+            rel = lines[0]
+            # Add rel to all_relations if it hasn't; and break control (since data in csvFile are sorted in terms of their relation, we break 'for' loop when it completes loading 'IsA' tuples)
+            if rel not in all_relations:
+                if len(all_relations) > 0:
+                    if 'IsA' in all_relations[-1]:
+                        break
+                # print(rel)
+                all_relations.append(rel)
+            # Only keep lines with 'IsA' relation and with other conditions
+            if 'IsA' in rel:
+                # condition 0: the relation is 'IsA'
+                rel_no_noise = rel.replace('/a/[/r/', '').strip().split('/')[0]
+                assert rel_no_noise == 'IsA'
+                # condition 1: e1 and e2 are written in English
+                e1 = lines[1]
+                e2 = lines[2]
+                if e1.startswith('/c/en/') and e2.startswith('/c/en/'):
+                    e1 = e1.replace('/c/en', '').strip('/').replace('_', ' ')
+                    e2 = e2.replace('/c/en', '').split('/')[1].replace('_', ' ')
+                    dataset_collection.append((e1, rel_no_noise, e2, None))
+    print("Loaded 'IsA' tuples from conceptnet-assertions-5.7.0.csv.")
+    return dataset_collection
+
+
+
 
 # FUNCTION
 #   get values of the cur_node and values that correspond to all sub-nodes of cur_node
@@ -109,15 +149,15 @@ def build_primenet(dataset, max_recursion_depth):
         if len(e1.split()) > 1 or len(e2.split()) > 1:
             # print("e1: {}, e2: {}".format(e1, e2))
             continue
+        # e1 should not equal to e2 (if so, it's hard to build a hierachical PrimeNet)
+        if e1 == e2:
+            continue
         # check if e1 and e2 are both NOUN
         posTag_e1 = nltk.pos_tag([e1])
         posTag_e2 = nltk.pos_tag([e2])
         # only keep data when e1 and e2 are both NOUN
         if not ((posTag_e1[0][1] == 'NN' or posTag_e1[0][1] == 'NNS' or posTag_e1[0][1] == 'NNPS' or posTag_e1[0][1] == 'NNP') and (posTag_e2[0][1] == 'NN' or posTag_e2[0][1] == 'NNS' or posTag_e2[0][1] == 'NNPS' or posTag_e2[0][1] == 'NNP')):
             # print("posTag_e1: {}, posTag_e2: {}".format(posTag_e1, posTag_e2))
-            continue
-        # e1 should not equal to e2 (if so, it's hard to build a hierachical PrimeNet)
-        if e1 == e2:
             continue
         # build PrimeNet
         if e2 not in PrimeNet:

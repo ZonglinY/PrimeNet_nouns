@@ -1,4 +1,4 @@
-import os, copy, sys, csv
+import os, copy, sys, csv, string
 import nltk
 
 # FUNCTION
@@ -18,8 +18,9 @@ def load_conceptnet_only_keep_IsA_relation_single_file(dataset_path=None):
             if label == "0":
                 continue
             rel = rel.strip()
-            e1 = e1.strip()
-            e2 = e2.strip()
+            # lower case and without punctuation
+            e1 = e1.strip().lower().translate(str.maketrans('','',string.punctuation))
+            e2 = e2.strip().lower().translate(str.maketrans('','',string.punctuation))
             # only keep data whose rel is "IsA"
             if rel != 'IsA':
                 continue
@@ -83,9 +84,9 @@ def load_full_conceptnet_only_keep_IsA_relation(dataset_root_path):
                 e1 = lines[1]
                 e2 = lines[2]
                 if e1.startswith('/c/en/') and e2.startswith('/c/en/'):
-                    # e1 = e1.replace('/c/en', '').strip('/').replace('_', ' ')
-                    e1 = e1.replace('/c/en', '').split('/')[1].replace('_', ' ')
-                    e2 = e2.replace('/c/en', '').split('/')[1].replace('_', ' ')
+                    # lower case and without punctuation
+                    e1 = e1.replace('/c/en', '').split('/')[1].replace('_', ' ').lower().translate(str.maketrans('','',string.punctuation))
+                    e2 = e2.replace('/c/en', '').split('/')[1].replace('_', ' ').lower().translate(str.maketrans('','',string.punctuation))
                     if '/' in e1 or '/' in e2:
                         print("e1: {}; e2: {}".format(lines[1], lines[2]))
                         raise Exception
@@ -144,7 +145,7 @@ def build_primenet(dataset, max_recursion_depth):
     ## for nltk PoS tagging
     nltk.download('averaged_perceptron_tagger')
 
-    # Build PrimeNet (not hierachical)
+    ## Build PrimeNet (not hierachical)
     PrimeNet = {}
     cnt_used_conceptnet_instance = 0
     print("\nBuilding raw (non-hierachical) PrimeNet...")
@@ -179,7 +180,7 @@ def build_primenet(dataset, max_recursion_depth):
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]
     print('average length of collection for each key in PrimeNet: ', sum(len_collection_for_each_key)/len(len_collection_for_each_key))
 
-    # Build hierachical PrimeNet
+    ## Build hierachical PrimeNet
     #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth)
     print("\nBuilding hierachical PrimeNet...")
     # dict_noter: dict_noter[concept_as_key] = all_values_in_and_below_this_node; to recuce repetitive computations

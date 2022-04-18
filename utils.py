@@ -1,5 +1,6 @@
 import os, copy, sys, csv, string
 import nltk
+import json
 
 # FUNCTION
 #   Load dataset from dataset_path;
@@ -103,10 +104,16 @@ def load_full_conceptnet_only_keep_IsA_relation(dataset_root_path):
 #   PrimeNet: PrimeNet
 #   cur_node: a key in PrimeNet
 #   remained_depth: max depth for the recursion (it seems there's circle in PrimeNet so there's unlimited depth for this recursion; hence we use remained_depth to avoid this problem)
+#   root_node: the root node that begins get_all_values_in_and_below_this_node
+#   max_remained_depth: the remained_depth that begins get_all_values_in_and_below_this_node
 # OUTPUT
 #   all_values_in_and_below_this_node: a list of string entities
-def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
+def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth, root_node, max_remained_depth):
     assert cur_node in PrimeNet
+
+    # to avoid loop count
+    if (cur_node in PrimeNet[root_node] or cur_node == root_node) and remained_depth != max_remained_depth:
+        return [cur_node]
 
     ## all_values_in_this_node: a list
     all_values_in_this_node = PrimeNet[cur_node]
@@ -122,7 +129,7 @@ def get_all_values_in_and_below_this_node(PrimeNet, cur_node, remained_depth):
         return all_values_in_this_node
     else:
         remained_depth -= 1
-        all_values_below_this_node_prev = [get_all_values_in_and_below_this_node(PrimeNet, sub_node, remained_depth) for sub_node in PrimeNet[cur_node] if sub_node in PrimeNet]
+        all_values_below_this_node_prev = [get_all_values_in_and_below_this_node(PrimeNet, sub_node, remained_depth, root_node, max_remained_depth) for sub_node in PrimeNet[cur_node] if sub_node in PrimeNet]
         all_values_below_this_node = []
         for value_list in all_values_below_this_node_prev:
             all_values_below_this_node += value_list
@@ -145,7 +152,7 @@ def build_primenet(dataset, max_recursion_depth):
     ## for nltk PoS tagging
     nltk.download('averaged_perceptron_tagger')
 
-    ## Build PrimeNet (not hierachical)
+    ### Build PrimeNet (not hierachical)
     PrimeNet = {}
     cnt_used_conceptnet_instance = 0
     print("\nBuilding raw (non-hierachical) PrimeNet...")
@@ -180,35 +187,61 @@ def build_primenet(dataset, max_recursion_depth):
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]
     print('average length of collection for each key in PrimeNet: ', sum(len_collection_for_each_key)/len(len_collection_for_each_key))
 
-    ## Build hierachical PrimeNet
-    #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth)
+    ### Build hierachical PrimeNet
+    #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth) (here subkey != this concept)
     print("\nBuilding hierachical PrimeNet...")
     # dict_noter: dict_noter[concept_as_key] = all_values_in_and_below_this_node; to recuce repetitive computations
     dict_noter = {}
     for key in PrimeNet:
         concept_list = PrimeNet[key]
-        hierachical_concept_list = copy.deepcopy(concept_list)
-        # used_concept_as_key: collect the concept_as_key that has been iterated
-        used_concept_as_key = []
+        ## Get temp_dict_key_removedConcept and temp_dict_key_num_removedConcept
+        # temp_dict_key_removedConcept: note which concept_as_key can remove which concept_as_value
+        temp_dict_key_removedConcept = {}
+        #  temp_dict_key_num_removedConcept: note which concept_as_key can remove how many concept_as_value
+        temp_dict_key_num_removedConcept = {}
         for concept_as_key in concept_list:
-            if len(hierachical_concept_list) == 0:
-                break
-            used_concept_as_key.append(concept_as_key)
+            temp_dict_key_removedConcept[concept_as_key] = []
+            temp_dict_key_num_removedConcept[concept_as_key] = 0
             if concept_as_key in PrimeNet:
+                # to be more hierachical, we remove certain repetitive concepts
+                if concept_as_key not in dict_noter:
+                    all_values_in_and_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=max_recursion_depth, root_node=concept_as_key, max_remained_depth=max_recursion_depth)
+                    dict_noter[concept_as_key] = all_values_in_and_below_this_node
+                else:
+                    all_values_in_and_below_this_node = dict_noter[concept_as_key]
                 for concept_as_value in concept_list:
-                    # to be more hierachical, we remove certain repetitive concepts
-                    if concept_as_key not in dict_noter:
-                        all_values_in_and_below_this_node = get_all_values_in_and_below_this_node(PrimeNet, concept_as_key, remained_depth=max_recursion_depth)
-                        dict_noter[concept_as_key] = all_values_in_and_below_this_node
-                    else:
-                        all_values_in_and_below_this_node = dict_noter[concept_as_key]
-                    if concept_as_value in all_values_in_and_below_this_node:
-                        if concept_as_value in hierachical_concept_list:
-                            hierachical_concept_list.remove(concept_as_value)
-                            # when len(hierachical_concept_list) == 0, we should just keep used_concept_as_key
-                            if len(hierachical_concept_list) == 0:
-                                break
-        PrimeNet[key] = sorted(list(set(hierachical_concept_list + used_concept_as_key)))
+                    # (subkey != this concept)
+                    if concept_as_value != concept_as_key:
+                        if concept_as_value in all_values_in_and_below_this_node:
+                            if concept_as_value not in temp_dict_key_removedConcept[concept_as_key]:
+                                temp_dict_key_removedConcept[concept_as_key].append(concept_as_value)
+                                temp_dict_key_num_removedConcept[concept_as_key] += 1
+        ## Use temp_dict_key_removedConcept and temp_dict_key_num_removedConcept to decide why concept in hierachical_concept_list to remove
+        # use a greedy method that each time select a concept with most temp_removed_concepts, util all concepts are covered.
+        covered_keys = []
+        hierachical_concept_list = []
+        most_influential_key = sorted(temp_dict_key_num_removedConcept, key=temp_dict_key_num_removedConcept.__getitem__, reverse=True)
+        # add influential keys to hierachical_concept_list
+        for id_influ_key, influ_key in enumerate(most_influential_key):
+            # many temp_dict_key_removedConcept[influ_key] is [], and we do not want to add influ_key in this circumstance
+            if len(temp_dict_key_removedConcept[influ_key]) > 0:
+                covered_keys += temp_dict_key_removedConcept[influ_key]
+                covered_keys += [influ_key]
+                covered_keys = list(set(covered_keys))
+                hierachical_concept_list.append(influ_key)
+            assert len(covered_keys) <= len(concept_list)
+            if len(covered_keys) == len(concept_list):
+                break
+        if not len(covered_keys) == len(concept_list):
+            # add non-influential keys to hierachical_concept_list
+            for id_tmp_key, tmp_key in enumerate(concept_list):
+                if tmp_key not in covered_keys:
+                    hierachical_concept_list.append(tmp_key)
+                    covered_keys.append(tmp_key)
+                if len(covered_keys) == len(concept_list):
+                    break
+        assert len(covered_keys) == len(concept_list)
+        PrimeNet[key] = sorted(list(set(hierachical_concept_list)))
 
     # statistics
     print("Statistics for hierachical PrimeNet:")

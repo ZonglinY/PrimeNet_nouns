@@ -187,6 +187,7 @@ def build_primenet(dataset, max_recursion_depth):
     len_collection_for_each_key = [len(PrimeNet[key]) for key in PrimeNet]
     print('average length of collection for each key in PrimeNet: ', sum(len_collection_for_each_key)/len(len_collection_for_each_key))
 
+
     ### Build hierachical PrimeNet
     #   remove the concept from PrimeNet[key] if concept in PrimeNet[subkey] and subkey in PrimeNet[key] (here depth is 1, and we can set max_recursion_depth for this depth) (here subkey != this concept)
     print("\nBuilding hierachical PrimeNet...")
@@ -224,7 +225,7 @@ def build_primenet(dataset, max_recursion_depth):
         # add influential keys to hierachical_concept_list
         for id_influ_key, influ_key in enumerate(most_influential_key):
             # many temp_dict_key_removedConcept[influ_key] is [], and we do not want to add influ_key in this circumstance
-            if len(temp_dict_key_removedConcept[influ_key]) > 0:
+            if len(temp_dict_key_removedConcept[influ_key]) > 0 and influ_key not in covered_keys:
                 covered_keys += temp_dict_key_removedConcept[influ_key]
                 covered_keys += [influ_key]
                 covered_keys = list(set(covered_keys))

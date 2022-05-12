@@ -3,7 +3,6 @@
 ## Brief intro of current code
 Build hierachical PrimeNet from full ConceptNet tuples. One example of ConceptNet tuple is (necklace, IsA, jewelrey).
 
-
 For current version, only when 
 
 1. the relation of the tuple == "IsA"
